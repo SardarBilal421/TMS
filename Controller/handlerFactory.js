@@ -98,7 +98,6 @@ exports.getAll = (Model) =>
     const feature = new FeaturesAPI(Model.find(), req.query)
       .sorting()
       .filtering()
-      .pagination()
       .limitingFields();
 
     const doc = await feature.queryy;
