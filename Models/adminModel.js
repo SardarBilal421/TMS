@@ -45,6 +45,25 @@ adminSchema.pre("save", async function (next) {
   this.passwordConfirm = undefined;
 });
 
+adminSchema.methods.correctPassword = async function (
+  candidatePassword,
+  userPassword
+) {
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+adminSchema.methods.changePasswordAfter = function (JWTTimeStamp) {
+  if (this.passwordChangeAt) {
+    const changedTimeStamp = parseInt(
+      this.passwordChangeAt.getTime() / 1000,
+      10
+    );
+    return JWTTimeStamp < changedTimeStamp;
+  }
+
+  return false;
+};
+
 const Admin = mongoose.model("Admin", adminSchema);
 
 module.exports = Admin;

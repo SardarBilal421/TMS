@@ -3,15 +3,15 @@ const router = express.Router();
 const adminController = require("../Controller/adminController");
 const authController = require("../Controller/authController");
 
-router
-  .route("/")
-  .get(authController.restrictTo("admin"), adminController.getAllAdmin)
-  .post(authController.restrictTo("admin"), adminController.createNewAdmin);
+router.post("/login", adminController.loginAdmin);
 
-router
-  .route("/:id")
-  //   .get(adminController.getPublishByID)
-  //   .patch(adminController.updatePublish)
-  .delete(authController.restrictTo("admin"), adminController.deleteAdmin);
+router.use(adminController.protect);
+router.use(authController.restrictTo("admin"));
+
+router.post("/signup", adminController.signupAdmin);
+
+router.route("/").get(adminController.getAllAdmin);
+
+router.route("/:id").delete(adminController.deleteAdmin);
 
 module.exports = router;

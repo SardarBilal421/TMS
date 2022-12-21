@@ -4,6 +4,7 @@ const appError = require("../Utilties/appError");
 const User = require("./../models/userModel");
 const catchAsync = require("../Utilties/catchAsync");
 const factory = require("./handlerFactory");
+const sendEmail = require("./../Utilties/email");
 
 const FeaturesAPI = require("./../Utilties/features");
 // const sendEmail = require("./../Utilties/catchAsync");
@@ -27,7 +28,7 @@ exports.getUserByID = factory.getOne(User);
 // Do not Update Password Using this Fucntion
 exports.updateUser = factory.updateOne(User);
 exports.deleteUser = factory.deleteOne(User);
-exports.createNewUser = factory.createOne(User);
+// exports.createNewUser = factory.createOne(User);
 
 // AUTHENTICATION
 
@@ -48,30 +49,30 @@ exports.restrictTo = (...roles) => {
   };
 };
 
-// const createSendToken = (user, statusCode, res) => {
-//   const token = signToken(user._id);
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
 
-//   const cookieOptions = {
-//     expires: new Date(
-//       Date.now() + process.env.JWT_EXPIRES_EXPIRE_IN * 24 * 60 * 60 * 1000
-//     ),
-//     httpOnly: true,
-//   };
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_EXPIRES_EXPIRE_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true,
+  };
 
-//   if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+  if (process.env.NODE_ENV === "production") cookieOptions.secure = true;
 
-//   res.cookie('jwt', token, cookieOptions);
-//   // Remove passowrd from the output
-//   user.password = undefined;
+  res.cookie("jwt", token, cookieOptions);
+  // Remove passowrd from the output
+  user.password = undefined;
 
-//   res.status(statusCode).json({
-//     status: 'success',
-//     token,
-//     data: {
-//       user,
-//     },
-//   });
-// };
+  res.status(statusCode).json({
+    status: "success",
+    token,
+    data: {
+      user,
+    },
+  });
+};
 
 exports.protect = catchAsync(async (req, res, next) => {
   //Getting tokken and check if its there or not
@@ -123,7 +124,7 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
 
   const resetUrl = `${req.protocol}://${req.get(
     "host"
-  )}/api/v1/users/resetPassword/${userRestToken}`;
+  )}/api/v1/user/resetPassword/${userRestToken}`;
 
   const message = ` forget your emial??? please send you passord and confirmPassword with this emial::${resetUrl}. \n if you didnt forget Email Please igone this mail `;
   try {
@@ -136,33 +137,16 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
       status: "success",
       message: "token sent to emial",
     });
+    console.log("there we are");
   } catch (err) {
     user.passwordResetToken = undefined;
     user.passwordResetExpire = undefined;
-    await user.save({ validateBeforSave: false });
+    await user.save({
+      validateBeforeSave: false,
+    });
 
     return next(new appError("there is and error in sending your emial"), 500);
   }
-});
-
-exports.loginUser = catchAsync(async (req, res, next) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return next(new appError("Please provide Email or password"), 400);
-  }
-
-  const user = await User.findOne({ email }).select("+password");
-
-  if (!user || !(await user.correctPassword(password, user.password))) {
-    return next(new appError("Incorrect Email or passowrd", 401));
-  }
-
-  const token = signToken(user._id);
-
-  res.status(201).json({
-    status: "success",
-    token,
-  });
 });
 
 exports.resetPassword = catchAsync(async (req, res, next) => {
@@ -191,13 +175,14 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
   user.passwordResetToken = undefined;
-  user.passwordResetExpire = undefined;
+  user.passwordResetExpires = undefined;
   await user.save();
   // 3) update changePasswordAt property for the user
 
   // 4) log the user in ,send JWT
 
   createSendToken(user, 201, res);
+  // const token = signToken(user._id);
 });
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
@@ -217,14 +202,61 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 });
 
 exports.signupUser = catchAsync(async (req, res, next) => {
-  const newUser = await User.create({
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password,
-    passwordConfirm: req.body.passwordConfirm,
-    role: req.body.role,
-  });
+  const newUser = await User.create(req.body);
+
+  if (!newUser) {
+    return next(new appError("Cannot create this user", 404));
+  }
 
   // const newUser = await User.create(req.body);
   createSendToken(newUser, 201, res);
+});
+
+exports.loginUser = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return next(new appError("Please provide Email or password"), 400);
+  }
+
+  const user = await User.findOne({ email }).select("+password");
+
+  if (!user || !(await user.correctPassword(password, user.password))) {
+    return next(new appError("Incorrect Email or passowrd", 401));
+  }
+
+  const token = signToken(user._id);
+
+  res.status(201).json({
+    status: "success",
+    token,
+  });
+});
+
+exports.updateMe = catchAsync(async (req, res, next) => {
+  // 1) Create error if user Post password
+  if (req.body.password || req.body.passwordConfirm) {
+    next(
+      new appError(
+        "This Route is not For Password, Please go to /updateMyPassword route",
+        400
+      )
+    );
+  }
+
+  // 2) Filtering out Unwanted Fieldds
+  const filterBody = filterObj(req.body, "name", "email", "role");
+
+  // 3) Update user Documents
+
+  const updateUser = await User.findByIdAndUpdate(req.user.id, filterBody, {
+    new: true,
+    runValidators: true,
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      user: updateUser,
+    },
+  });
 });

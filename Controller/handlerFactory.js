@@ -54,7 +54,7 @@ exports.createOne = (Model) =>
   catchAsync(async (req, res, next) => {
     const doc = await Model.create(req.body);
     if (!doc) {
-      return next(new appError("No doc found by this ID", 404));
+      return next(new appError("Cannot create this user", 404));
     }
     res.status(201).json({
       status: "success",
@@ -101,6 +101,59 @@ exports.getAll = (Model) =>
       .limitingFields();
 
     const doc = await feature.queryy;
+
+    res.status(200).json({
+      status: "success",
+      length: doc.length,
+      data: {
+        doc,
+      },
+    });
+  });
+
+exports.getAllForUser = (Model) =>
+  catchAsync(async (req, res, next) => {
+    // for nested Routes
+    // let filter = {};
+    // if (req.params.tourId) filter = { tour: req.params.tourId };
+
+    //   const feature = new FeaturesAPI(Model.find(), req.query)
+    //     .sorting()
+    //     .filtering()
+    //     .limitingFields();
+
+    const feature = new FeaturesAPI(
+      Model.find({ userId: req.user._id }),
+      req.query
+    )
+      .sorting()
+      .filtering()
+      .limitingFields();
+
+    const doc = await feature.queryy;
+    if (!doc) {
+      return next(new appError("No doc found by Your ID", 404));
+    }
+
+    res.status(200).json({
+      status: "success",
+      length: doc.length,
+      data: {
+        doc,
+      },
+    });
+  });
+exports.getAllFreePublish = (Model) =>
+  catchAsync(async (req, res, next) => {
+    const feature = new FeaturesAPI(Model.find({ pfTender: "free" }), req.query)
+      .sorting()
+      .filtering()
+      .limitingFields();
+
+    const doc = await feature.queryy;
+    if (!doc) {
+      return next(new appError("No doc found by Your ID", 404));
+    }
 
     res.status(200).json({
       status: "success",

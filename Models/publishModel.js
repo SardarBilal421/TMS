@@ -31,6 +31,15 @@ const publishSchema = mongoose.Schema({
     type: Number,
     requried: [true, "A tender must have Mobile number"],
   },
+  category: {
+    type: String,
+    required: [true, "A tender must belong to some categrory"],
+  },
+  userId: {
+    type: mongoose.Schema.ObjectId,
+    ref: "User",
+    required: [true, "A Tender must belong to a user"],
+  },
   webiste: {
     type: String,
   },
@@ -72,6 +81,7 @@ const publishSchema = mongoose.Schema({
     type: String,
     enum: ["paid", "free"],
     default: "free",
+    lowercase: true,
   },
   comments: {
     type: String,

@@ -5,7 +5,7 @@ const crypto = require("crypto");
 const { Console } = require("console");
 
 const userSchema = mongoose.Schema({
-  name: {
+  organizationName: {
     type: String,
     required: [true, "A user must have name"],
   },
@@ -40,9 +40,6 @@ const userSchema = mongoose.Schema({
     type: Boolean,
     select: false,
     default: true,
-  },
-  organization: {
-    type: String,
   },
   website: {
     type: String,
@@ -92,17 +89,17 @@ userSchema.methods.correctPassword = async function (
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
-// userSchema.methods.changePasswordAfter = function (JWTTimeStamp) {
-//   if (this.passwordChangeAt) {
-//     const changedTimeStamp = parseInt(
-//       this.passwordChangeAt.getTime() / 1000,
-//       10
-//     );
-//     return JWTTimeStamp < changedTimeStamp;
-//   }
+userSchema.methods.changePasswordAfter = function (JWTTimeStamp) {
+  if (this.passwordChangeAt) {
+    const changedTimeStamp = parseInt(
+      this.passwordChangeAt.getTime() / 1000,
+      10
+    );
+    return JWTTimeStamp < changedTimeStamp;
+  }
 
-//   return false;
-// };
+  return false;
+};
 
 userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString("hex");

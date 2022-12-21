@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const publishController = require("../Controller/publishController");
-// const authController = require('../Controller/authController');
+const userController = require("../Controller/userController");
+const authController = require("../Controller/authController");
 
 // router.get(
 //   '/getMe',
@@ -25,6 +26,14 @@ const publishController = require("../Controller/publishController");
 
 // router.use(authController.restrictTo('admin'));
 
+router.get("/deActivateExpireTenderstime", publishController.getTime);
+
+router.get("/free", publishController.getAllFreePublish);
+
+router.use(userController.protect);
+
+router.get("/userGetPublisher", publishController.getAllForUser);
+
 router
   .route("/")
   .get(publishController.getAllPublish)
@@ -33,7 +42,7 @@ router
 router
   .route("/:id")
   .get(publishController.getPublishByID)
-  .patch(publishController.updatePublish)
+  // .patch(publishController.updatePublish)
   .delete(publishController.deletePublish);
 
 module.exports = router;
