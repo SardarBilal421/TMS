@@ -19,9 +19,7 @@ exports.restrictTo = (...roles) => {
 
 exports.getAllAdmin = factory.getAll(Admin);
 exports.getAdminByID = factory.getOne(Admin);
-// Do not Update Password Using this Fucntion
 exports.updateAdmin = factory.updateOne(Admin);
-// exports.deleteAdmin = factory.deleteOne(Admin);
 exports.createNewAdmin = factory.createOne(Admin);
 
 exports.deleteAdmin = catchAsync(async (req, res, next) => {
