@@ -50,6 +50,9 @@ exports.updateOne = (Model) =>
 
 exports.createOne = (Model) =>
   catchAsync(async (req, res, next) => {
+    if (req.user.role === "publisher" && req.body.pfTender === "free") {
+      return next(new appError("You Cannot Add Free Tenders", 404));
+    }
     const doc = await Model.create(req.body);
     if (!doc) {
       return next(new appError("Cannot create this user", 404));

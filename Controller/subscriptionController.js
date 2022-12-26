@@ -31,7 +31,6 @@ exports.sendMails = catchAsync(async (req, res, next) => {
       status: "success",
       message: "token sent to emial",
     });
-    console.log("there we are");
   } catch (err) {
     console.log("Error", err.message);
   }

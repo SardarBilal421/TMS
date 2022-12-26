@@ -117,7 +117,6 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
   req.user = currentAdmin;
   //GRAND ACCESS TO PROTEXTED ROUTE
-  console.log(req.user);
   next();
 });
 

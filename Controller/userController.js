@@ -113,12 +113,10 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
 
   //Generate the Random emial reset Token
   const userRestToken = user.createPasswordResetToken();
-  console.log(userRestToken);
+
   await user.save({
     validateBeforeSave: false,
   });
-
-  console.log("user", user);
 
   //Send it to user Email
 
@@ -137,7 +135,6 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
       status: "success",
       message: "token sent to emial",
     });
-    console.log("there we are");
   } catch (err) {
     user.passwordResetToken = undefined;
     user.passwordResetExpire = undefined;
@@ -162,15 +159,10 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   });
 
   // 2) if token has not expired and there is user, set the new password
-  console.log(user);
-
-  console.log(hashedToken);
 
   if (!user) {
     return next(new appError("Tokeen is invalid or has expored", 400));
   }
-  console.log(user.password);
-  console.log(user.passwordConfirm);
 
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
@@ -229,6 +221,7 @@ exports.loginUser = catchAsync(async (req, res, next) => {
   res.status(201).json({
     status: "success",
     token,
+    role: user.role,
   });
 });
 
@@ -260,3 +253,8 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
