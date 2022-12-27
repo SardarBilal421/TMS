@@ -1,4 +1,3 @@
-// const fs = require('fs');
 const express = require("express");
 const appError = require("../Utilties/appError");
 const User = require("./../models/userModel");
@@ -7,7 +6,6 @@ const factory = require("./handlerFactory");
 const sendEmail = require("./../Utilties/email");
 
 const FeaturesAPI = require("./../Utilties/features");
-// const sendEmail = require("./../Utilties/catchAsync");
 const crypto = require("crypto");
 const { promisify } = require("util");
 const jwt = require("jsonwebtoken");
@@ -25,10 +23,8 @@ const filterObj = (obj, ...allowedFields) => {
 
 exports.getAllUsers = factory.getAll(User);
 exports.getUserByID = factory.getOne(User);
-// Do not Update Password Using this Fucntion
 exports.updateUser = factory.updateOne(User);
 exports.deleteUser = factory.deleteOne(User);
-// exports.createNewUser = factory.createOne(User);
 
 // AUTHENTICATION
 

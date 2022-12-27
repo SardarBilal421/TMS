@@ -1,7 +1,5 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
-// const User = require("./userModel");
-// const User = require("./userModel");
 const publishSchema = mongoose.Schema({
   firstName: {
     type: String,
@@ -101,18 +99,6 @@ publishSchema.pre(/^find/, function (next) {
   this.find({ isActive: { $ne: false } });
   next();
 });
-
-// publishSchema.pre("save", async function (next) {
-//   if (!this.isModified("pfTender")) return next();
-
-//   // const user = await User.findOne({ _id: this.userId }).select("+role");
-
-//   console.log(await User.find({ _id: this.userId }));
-
-//   // this.password = await bcrypt.hash(this.password, 12);
-
-//   // this.passwordConfirm = undefined;
-// });
 
 const Publish = mongoose.model("Publish", publishSchema);
 
